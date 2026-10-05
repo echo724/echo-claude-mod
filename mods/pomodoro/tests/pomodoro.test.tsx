@@ -1,0 +1,108 @@
+import { expect, mock, test } from 'claude-code/testing'
+
+import { faceOf } from '../hooks/face'
+
+const BAND = {
+  hasSurvey: false,
+  isWorking: false,
+  maxRows: 10,
+  bodyColumns: 80,
+  scroll: { offset: 0, bodyRows: 1 },
+  view: {},
+} as const
+
+test('the timer counts down in the hint line, pauses, and moves on', async ($, on) => {
+  const clock = mock.clock(on)
+  mock.store(on)
+  on('session.start', ($, e) => ({ cwd: e.cwd }))
+  on('command.register', ($, e) => ({ value: { command: e.name } }))
+  on('ui.toast', () => ({ value: undefined }))
+  // The engine's own line, as far as a test needs it: the hint, then the tail.
+  on('ui.render', { component: 'PromptHint' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>{`${e.props.hint}|${e.props.tail ?? ''}`}</Text>
+  })
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Box } = $.ui.resolve(e)
+
+    return <Box />
+  })
+
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+  const hint = await $.ui.mount({
+    plugin: 'pomodoro',
+    component: 'PromptHint',
+    surface: 'terminal',
+    props: { isDraft: false, isWorking: false, hint: '? for shortcuts' },
+  })
+  const line = async () => (await hint.find({ type: 'Text' }))?.text
+  const run = (command: string, args = '') =>
+    $.command.run({
+      command,
+      args,
+      origin: { kind: 'composer' },
+      presentation: { isFullscreen: false, columns: 80 },
+    })
+
+  expect(await line()).toBe('? for shortcuts|')
+
+  await run('pomo')
+  expect(await line()).toBe('? for shortcuts|FOCUS 25:00 #1 ╌╌╌╌╌╌╌╌')
+
+  await clock.advance(60_000)
+  expect(await line()).toContain('FOCUS 24:00 #1')
+
+  await run('pomo')
+  await clock.advance(60_000)
+  expect(await line()).toContain('PAUSED 24:00 #1')
+
+  await run('pomo')
+  await clock.advance(24 * 60_000)
+  expect(await line()).toContain('BREAK 05:00 #1')
+
+  await run('pomo-skip')
+  expect(await line()).toContain('FOCUS 25:00 #2')
+
+  await run('pomo-clock')
+  expect(await line()).toBe('? for shortcuts|')
+
+  const band = await $.ui.mount({
+    plugin: 'pomodoro',
+    component: 'AbovePrompt',
+    surface: 'terminal',
+    props: BAND,
+  })
+  expect(await band.find({ type: 'Text', text: /25:00/ })).toBeDefined()
+  await band.unmount()
+
+  await run('pomo-line')
+  await run('pomo-reset')
+  expect(await line()).toBe('? for shortcuts|')
+
+  await run('pomo-set', '50 10')
+  await run('pomo')
+  expect(await line()).toContain('FOCUS 50:00 #1')
+  await run('pomo', 'skip')
+  expect(await line()).toContain('BREAK 10:00 #1')
+  await run('pomo-set', '999')
+  await run('pomo-skip')
+  expect(await line()).toContain('FOCUS 50:00 #2')
+  await hint.unmount()
+})
+
+test('the dial empties clockwise from twelve', () => {
+  const lit = (rows: string[]) =>
+    [...rows.join('')].reduce(
+      (sum, cell) =>
+        sum +
+        ((cell.codePointAt(0) ?? 0x2800) - 0x2800)
+          .toString(2)
+          .replaceAll('0', '').length,
+      0,
+    )
+
+  expect(lit(faceOf(1))).toBeGreaterThan(lit(faceOf(0.5)))
+  expect(lit(faceOf(0.5))).toBeGreaterThan(lit(faceOf(0)))
+})
