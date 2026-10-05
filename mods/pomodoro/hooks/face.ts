@@ -1,14 +1,13 @@
-/** The clock face, in braille dots: two across and four down in each cell. */
+/** The dial, in braille dots: two across and four down in each cell. */
 export const FACE_COLUMNS = 10
 export const FACE_ROWS = 5
 
-const DOTS_ACROSS = FACE_COLUMNS * 2
-const DOTS_DOWN = FACE_ROWS * 4
-const CENTER = (DOTS_ACROSS - 1) / 2
-const RIM = CENTER
-const RIM_WIDTH = 1
-const DIAL = RIM - 2
-const HAND_WIDTH = 0.7
+const CENTER = FACE_COLUMNS - 0.5
+const TICK_REACH = CENTER - 0.2
+const DISK_REACH = CENTER - 3
+const HUB_REACH = 1.2
+const HAND_WIDTH = 0.6
+const HOURS = 12
 const BRAILLE = 0x2800
 // A cell's dots as bits, by column then row.
 const BITS = [
@@ -16,25 +15,45 @@ const BITS = [
   [0x08, 0x10, 0x20, 0x80],
 ] as const
 
+/** What a cell of the dial shows: the hand, the time left, or the scale. */
+export type Part = 'hand' | 'left' | 'tick'
+
+/** Cells side by side that share a part, so one color draws them. */
+export type Run = { part: Part; text: string }
+
+// The scale round the rim: a dot an hour, a second one inward at each quarter.
+const TICKS = new Set(
+  Array.from({ length: HOURS }, (_, hour) => {
+    const angle = (hour / HOURS) * 2 * Math.PI
+    const at = (reach: number) =>
+      `${Math.round(CENTER + reach * Math.sin(angle))},${Math.round(CENTER - reach * Math.cos(angle))}`
+
+    return hour % 3 === 0 ? [at(TICK_REACH), at(TICK_REACH - 1)] : [at(TICK_REACH)]
+  }).flat(),
+)
+
 /**
- * A kitchen timer's dial for the share of the phase still left: a rim, a
- * hand that turns clockwise from twelve as time runs, and the time left
- * shaded from the hand round to twelve.
+ * A visual timer's dial for the share of the phase still left: a disk that
+ * is solid for the time left and empties clockwise from twelve as time runs,
+ * a hand on its moving edge, and a scale of dots round the rim.
+ *
+ * A cell has one color: the hand's where it crosses, else the disk's, else
+ * the scale's. The scale's dots show in every cell, in that cell's color.
  */
-export const faceOf = (left: number): string[] => {
+export const faceOf = (left: number): Run[][] => {
   const turned = (1 - left) * 2 * Math.PI
 
-  const isLit = (x: number, y: number): boolean => {
+  const partOf = (x: number, y: number): Part | undefined => {
     const dx = x - CENTER
     const dy = y - CENTER
     const reach = Math.hypot(dx, dy)
 
-    if (reach > RIM - RIM_WIDTH) {
-      return reach <= RIM + 0.3
+    if (TICKS.has(`${x},${y}`)) {
+      return 'tick'
     }
 
-    if (reach > DIAL) {
-      return false
+    if (reach > DISK_REACH) {
+      return undefined
     }
 
     // Clockwise from twelve, 0 to a full turn.
@@ -42,22 +61,38 @@ export const faceOf = (left: number): string[] => {
     const offHand = Math.abs(reach * Math.sin(angle - turned))
     const isOnHand = offHand <= HAND_WIDTH && Math.cos(angle - turned) > 0
 
-    return isOnHand || reach < 1 || (angle > turned && (x + y) % 2 === 0)
+    if (isOnHand || reach < HUB_REACH) {
+      return 'hand'
+    }
+
+    return angle > turned ? 'left' : undefined
+  }
+
+  const cellOf = (column: number, row: number): Run => {
+    const dots = BITS.flatMap((bits, across) =>
+      bits.map((bit, down) => ({
+        bit,
+        part: partOf(column * 2 + across, row * 4 + down),
+      })),
+    )
+    const has = (part: Part) => dots.some(dot => dot.part === part)
+    const part: Part = has('hand') ? 'hand' : has('left') ? 'left' : 'tick'
+    const bits = dots
+      .filter(dot => dot.part === part || dot.part === 'tick')
+      .reduce((sum, dot) => sum | dot.bit, 0)
+
+    return { part, text: String.fromCodePoint(BRAILLE + bits) }
   }
 
   return Array.from({ length: FACE_ROWS }, (_, row) =>
-    Array.from({ length: FACE_COLUMNS }, (_, column) => {
-      let bits = 0
+    Array.from({ length: FACE_COLUMNS }, (_, column) => cellOf(column, row)).reduce<
+      Run[]
+    >((runs, cell) => {
+      const last = runs.at(-1)
 
-      for (let across = 0; across < 2; across += 1) {
-        for (let down = 0; down < 4; down += 1) {
-          if (isLit(column * 2 + across, row * 4 + down)) {
-            bits |= BITS[across]?.[down] ?? 0
-          }
-        }
-      }
-
-      return String.fromCodePoint(BRAILLE + bits)
-    }).join(''),
+      return last?.part === cell.part
+        ? [...runs.slice(0, -1), { part: cell.part, text: last.text + cell.text }]
+        : [...runs, cell]
+    }, []),
   )
 }

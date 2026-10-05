@@ -184,21 +184,21 @@ export const register: Register = on => {
 
     const left = leftOf(now, await $.clock.now())
     const color = COLORS[now.endsAt === null ? 'paused' : now.phase]
-    const beside = [
-      '',
-      `${titleOf(now)}  #${now.round}`,
-      clockOf(left),
-      '',
-      '/pomo  /pomo-skip  /pomo-reset  /pomo-set 50 10  /pomo-line',
-    ]
+    const tints = { hand: 'text', left: color, tick: 'inactive' } as const
+    const share = left / now.lengthMs
+    const beside = ['', clockOf(left), barOf(share), `${titleOf(now)}  #${now.round}`]
     const { Box, Text } = $.ui.resolve(e)
 
     return (
       <Box flexDirection="column">
-        {faceOf(left / now.lengthMs).map((dots, row) => (
+        {faceOf(share).map((runs, row) => (
           <Box>
-            <Text color={color}>{dots}</Text>
-            <Text bold={row < 3} color={row < 3 ? color : 'inactive'}>
+            {runs.map(run => (
+              <Text bold={run.part === 'hand'} color={tints[run.part]}>
+                {run.text}
+              </Text>
+            ))}
+            <Text bold={row === 1} color={row === 3 ? 'inactive' : color}>
               {`   ${beside[row] ?? ''}`}
             </Text>
           </Box>

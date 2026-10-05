@@ -9,12 +9,15 @@ Mods for Claude Code. Install and usage notes live in each mod's own README.
 As a dial above the prompt:
 
 ```
-⠀⢀⡴⢒⢛⠛⠒⢦⡀⠀
-⢰⢋⢔⢕⢕⠀⠀⠀⠙⡆   FOCUS  #1
-⣿⢐⢕⢕⢵⢦⣤⣀⡀⣿   17:30
-⠸⣔⢕⢕⢕⢕⢕⠝⣡⠇
-⠀⠈⠳⠥⣥⣥⠥⠞⠁⠀   /pomo  /pomo-skip  /pomo-reset  /pomo-set 50 10  /pomo-line
+⠀⠀⠐⠀⠀⠃⠀⠂⠀⠀
+⠐⠀⣰⣾⣿⠀⠀⠀⠀⠂   17:30
+⠤⠀⣿⣿⠰⠦⢄⣀⠀⠤   ━━╌╌╌╌╌╌
+⠠⠀⠹⢿⣿⣿⡿⠏⠀⠄   FOCUS  #1
+⠀⠀⠠⠀⠀⡄⠀⠄⠀⠀
 ```
+
+The disk is the time left: it takes your theme's error color (success during a
+break), the hand its text color, and the scale its inactive color.
 
 Or in the hint line under the prompt:
 

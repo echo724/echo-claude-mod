@@ -3,6 +3,18 @@
 A pomodoro timer inside Claude Code: focus and break phases that follow one
 another, shown in the hint line under the prompt or as a dial above it.
 
+```
+⠀⠀⠐⠀⠀⠃⠀⠂⠀⠀
+⠐⠀⣰⣾⣿⠀⠀⠀⠀⠂   17:30
+⠤⠀⣿⣿⠰⠦⢄⣀⠀⠤   ━━╌╌╌╌╌╌
+⠠⠀⠹⢿⣿⣿⡿⠏⠀⠄   FOCUS  #1
+⠀⠀⠠⠀⠀⡄⠀⠄⠀⠀
+```
+
+```
+? for shortcuts  FOCUS 17:30 #1 ━━╌╌╌╌╌╌
+```
+
 ## Install
 
 In Claude Code:
@@ -37,9 +49,11 @@ Type `/pomo` and the typeahead lists them all. `/pomo skip`, `/pomo reset`,
 - Focus is 25 minutes and a break 5 until you set others: focus 1 to 180,
   break 1 to 60. New lengths apply from the next phase that starts.
 - A toast says when a phase ends, and the next one starts by itself.
-- The dial's hand turns clockwise from twelve, and the shaded part is the time
-  left. Its colors are your theme's: error for focus, success for a break,
-  inactive while paused.
+- The dial is a visual timer: a disk that is solid for the time left and
+  empties clockwise from twelve, a hand on its moving edge, and a dotted scale
+  round the rim. Its colors are your theme's: error for the disk during focus
+  (success for a break, inactive while paused), text for the hand, inactive for
+  the scale.
 - The lengths and the display you picked are kept across sessions. A running
   timer is not: it ends with the session.
 

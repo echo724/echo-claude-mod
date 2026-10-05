@@ -93,8 +93,8 @@ test('the timer counts down in the hint line, pauses, and moves on', async ($, o
 })
 
 test('the dial empties clockwise from twelve', () => {
-  const lit = (rows: string[]) =>
-    [...rows.join('')].reduce(
+  const lit = (rows: { text: string }[][]) =>
+    [...rows.flat().map(run => run.text).join('')].reduce(
       (sum, cell) =>
         sum +
         ((cell.codePointAt(0) ?? 0x2800) - 0x2800)
