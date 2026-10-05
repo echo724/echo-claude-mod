@@ -4,17 +4,7 @@ Widgets above the prompt in Claude Code. Each sits in a rounded box of its
 own, and a command switches it on or off. Two so far: a pomodoro timer and a
 calendar.
 
-```
-                           ╭──────────────────────╮
-                           │     October 2026     │
-╭────────────────────────╮ │ Su Mo Tu We Th Fr Sa │
-│ ⠀⠀⠐⠀⠀⠃⠀⠂⠀⠀             │ │              1  2  3 │
-│ ⠐⠀⣰⣾⣿⠀⠀⠀⠀⠂   17:30     │ │  4  5  6  7  8  9 10 │
-│ ⠤⠀⣿⣿⠰⠦⢄⣀⠀⠤   ━━╌╌╌╌╌╌  │ │ 11 12 13 14 15 16 17 │
-│ ⠠⠀⠹⢿⣿⣿⡿⠏⠀⠄   FOCUS  #1 │ │ 18 19 20 21 22 23 24 │
-│ ⠀⠀⠠⠀⠀⡄⠀⠄⠀⠀             │ │ 25 26 27 28 29 30 31 │
-╰────────────────────────╯ ╰──────────────────────╯
-```
+![A pomodoro timer and a calendar, each in a rounded box](../../docs/echo-widget.svg)
 
 ## Install
 
@@ -26,8 +16,6 @@ In Claude Code:
 ```
 
 Then run `/reload-plugins`, or start a new session.
-
-Do not install it beside the standalone `pomodoro` mod: both answer `/pomo`.
 
 ## Uninstall
 
@@ -43,17 +31,21 @@ side by side on the line above the prompt, each as tall as its content.
 | Command | What it does |
 | --- | --- |
 | `/echo-widget` | List the widgets and whether each is on |
-| `/echo-widget <name>` | Switch one on or off: `pomo` or `calendar` |
+| `/echo-widget pomo` | Switch the pomodoro timer on or off |
+| `/echo-widget calendar` | Switch the calendar on or off |
 
 ### Pomodoro
 
 | Command | What it does |
 | --- | --- |
-| `/pomo` | Start, pause or resume |
+| `/pomo` | Start, pause or resume the timer |
 | `/pomo-skip` | Jump to the next phase |
 | `/pomo-reset` | Stop and clear the timer |
 | `/pomo-set <focus> [break]` | Set the minutes, e.g. `/pomo-set 50 10` |
 | `/pomo-stats` | Time focused and rested, today and in all |
+
+`/pomo skip`, `/pomo reset`, `/pomo stats` and `/pomo 50 10` work too. Type
+`/pomo` and the typeahead lists every command.
 
 - Focus is 25 minutes and a break 5 until you set others: focus 1 to 180,
   break 1 to 60. New lengths apply from the next phase that starts.
