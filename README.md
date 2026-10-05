@@ -31,5 +31,6 @@ Or in the hint line under the prompt:
 | `/pomo-skip` | Jump to the next phase |
 | `/pomo-reset` | Stop and clear the timer |
 | `/pomo-set <focus> [break]` | Set the minutes, e.g. `/pomo-set 50 10` |
+| `/pomo-stats` | Time focused and rested, today and in all |
 | `/pomo-clock` | Show as a dial above the prompt |
 | `/pomo-line` | Show in the hint line under the prompt |

@@ -1,6 +1,7 @@
 import { expect, mock, test } from 'claude-code/testing'
 
 import { faceOf } from '../hooks/face'
+import { EMPTY_LOG, logged, toggled } from '../hooks/pomodoro'
 
 const BAND = {
   hasSurvey: false,
@@ -12,7 +13,8 @@ const BAND = {
 } as const
 
 test('the timer counts down in the hint line, pauses, and moves on', async ($, on) => {
-  const clock = mock.clock(on)
+  // A real moment: phases are told apart by when they began.
+  const clock = mock.clock(on, { now: Date.UTC(2026, 9, 5, 9) })
   mock.store(on)
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   on('command.register', ($, e) => ({ value: { command: e.name } }))
@@ -81,6 +83,24 @@ test('the timer counts down in the hint line, pauses, and moves on', async ($, o
   await run('pomo-reset')
   expect(await line()).toBe('? for shortcuts|')
 
+  // 1 min, then 24 more to the end of focus #1; nothing of the break or #2 ran.
+  expect((await run('pomo-stats')).text).toContain(
+    'Today     focus 25m (1 round) · break 0m',
+  )
+
+  await run('pomo')
+  await clock.advance(10 * 60_000)
+  expect((await run('pomo-stats')).text).toContain('focus 35m (1 round)')
+  await run('pomo-reset')
+  expect((await run('pomo-stats')).text).toContain('focus 35m (1 round)')
+
+  await run('pomo')
+  await clock.advance(25 * 60_000)
+  expect((await run('pomo-stats')).text).toContain(
+    'Today     focus 1h 00m (2 rounds) · break 0m',
+  )
+
+  await run('pomo-reset')
   await run('pomo-set', '50 10')
   await run('pomo')
   expect(await line()).toContain('FOCUS 50:00 #1')
@@ -105,4 +125,14 @@ test('the dial empties clockwise from twelve', () => {
 
   expect(lit(faceOf(1))).toBeGreaterThan(lit(faceOf(0.5)))
   expect(lit(faceOf(0.5))).toBeGreaterThan(lit(faceOf(0)))
+})
+
+test('a phase is logged once, however many sessions see it end', () => {
+  const timer = toggled(null, 1000, { focus: 25, break: 5 })
+  const once = logged(EMPTY_LOG, timer, timer.endsAt ?? 0)
+
+  expect(Object.values(once.days)).toEqual([
+    { focusMs: 25 * 60_000, breakMs: 0, rounds: 1 },
+  ])
+  expect(logged(once, timer, timer.endsAt ?? 0)).toBe(once)
 })

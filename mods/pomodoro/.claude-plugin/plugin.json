@@ -1,7 +1,9 @@
 {
   "name": "pomodoro",
-  "version": "0.1.0",
-  "description": "A pomodoro timer in the status line or as a dial above the prompt",
-  "author": { "name": "echo724" },
+  "version": "0.2.0",
+  "description": "A pomodoro timer shared by all your sessions, shown in the hint line or as a dial above the prompt, with a daily log",
+  "author": {
+    "name": "echo724"
+  },
   "types": "./types/index.d.ts"
 }
