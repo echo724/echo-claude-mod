@@ -6,6 +6,11 @@
   },
   "plugins": [
     {
+      "name": "echo-widget",
+      "source": "./mods/echo-widget",
+      "description": "Widgets above the prompt, each in its own box and switched on or off by a command: a pomodoro timer and a calendar"
+    },
+    {
       "name": "pomodoro",
       "source": "./mods/pomodoro",
       "description": "A pomodoro timer shared by all your sessions, shown in the hint line or as a dial above the prompt, with a daily log"
