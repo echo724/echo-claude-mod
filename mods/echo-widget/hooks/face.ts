@@ -5,6 +5,7 @@ export const FACE_ROWS = 5
 const CENTER = FACE_COLUMNS - 0.5
 const TICK_REACH = CENTER - 0.2
 const DISK_REACH = CENTER - 3
+const HUB_REACH = 1.2
 const HAND_WIDTH = 0.6
 const HOURS = 12
 const BRAILLE = 0x2800
@@ -14,55 +15,76 @@ const BITS = [
   [0x08, 0x10, 0x20, 0x80],
 ] as const
 
-/** What a cell of the dial shows: the pointer, the time left, or the scale. */
+/** What a cell of the dial shows: the hand, the time left, or the scale. */
 export type Part = 'hand' | 'left' | 'tick'
 
 /** Cells side by side that share a part, so one color draws them. */
 export type Run = { part: Part; text: string }
 
-// The scale round the rim: a dot an hour, a second one inward at each quarter.
-const TICKS = new Set(
+// The scale round the rim: a dot an hour, two at each quarter. The center
+// falls between dots, so a quarter's pair sits either side of its axis and the
+// scale mirrors left to right and top to bottom.
+export const TICKS = new Set(
   Array.from({ length: HOURS }, (_, hour) => {
     const angle = (hour / HOURS) * 2 * Math.PI
-    const at = (reach: number) =>
-      `${Math.round(CENTER + reach * Math.sin(angle))},${Math.round(CENTER - reach * Math.cos(angle))}`
+    const x = CENTER + TICK_REACH * Math.sin(angle)
+    const y = CENTER - TICK_REACH * Math.cos(angle)
 
-    return hour % 3 === 0 ? [at(TICK_REACH), at(TICK_REACH - 1)] : [at(TICK_REACH)]
+    if (hour % 3 !== 0) {
+      return [`${Math.round(x)},${Math.round(y)}`]
+    }
+
+    return hour % 6 === 0
+      ? [`${Math.floor(CENTER)},${Math.round(y)}`, `${Math.ceil(CENTER)},${Math.round(y)}`]
+      : [`${Math.round(x)},${Math.floor(CENTER)}`, `${Math.round(x)},${Math.ceil(CENTER)}`]
+  }).flat(),
+)
+
+/** Every dot of the disk when it is full, as `x,y`. */
+export const DISK = new Set(
+  Array.from({ length: FACE_COLUMNS * 2 * FACE_ROWS * 4 }, (_, at) => {
+    const x = at % (FACE_COLUMNS * 2)
+    const y = Math.floor(at / (FACE_COLUMNS * 2))
+
+    return Math.hypot(x - CENTER, y - CENTER) <= DISK_REACH ? [`${x},${y}`] : []
   }).flat(),
 )
 
 /**
  * A visual timer's dial for the share of the phase still left: a disk that
  * is solid for the time left and empties clockwise from twelve as time runs,
- * a pointer outside its moving edge, and a scale of dots round the rim.
+ * a hand from its center along its moving edge, and a scale of dots round
+ * the rim.
  *
- * A cell has one color and draws every dot it holds in it: the pointer's
- * where the pointer is, else the disk's, else the scale's. The pointer stays
- * off the disk, so no cell of the disk gives up its dots to it.
+ * A cell has one color: the hand's where it crosses, else the disk's, else
+ * the scale's. A cell the hand crosses draws the hand alone, which is what
+ * sets it off from the disk; the scale's dots show in every cell.
  */
 export const faceOf = (left: number): Run[][] => {
   const turned = (1 - left) * 2 * Math.PI
 
   const partOf = (x: number, y: number): Part | undefined => {
-    const dx = x - CENTER
-    const dy = y - CENTER
-    const reach = Math.hypot(dx, dy)
-
     if (TICKS.has(`${x},${y}`)) {
       return 'tick'
     }
 
-    // Clockwise from twelve, 0 to a full turn.
-    const angle = (Math.atan2(dx, -dy) + 2 * Math.PI) % (2 * Math.PI)
-
-    if (reach <= DISK_REACH) {
-      return angle > turned ? 'left' : undefined
+    if (!DISK.has(`${x},${y}`)) {
+      return undefined
     }
 
+    const dx = x - CENTER
+    const dy = y - CENTER
+    const reach = Math.hypot(dx, dy)
+    // Clockwise from twelve, 0 to a full turn.
+    const angle = (Math.atan2(dx, -dy) + 2 * Math.PI) % (2 * Math.PI)
     const offHand = Math.abs(reach * Math.sin(angle - turned))
     const isOnHand = offHand <= HAND_WIDTH && Math.cos(angle - turned) > 0
 
-    return isOnHand && reach < TICK_REACH ? 'hand' : undefined
+    if (isOnHand || reach < HUB_REACH) {
+      return 'hand'
+    }
+
+    return angle > turned ? 'left' : undefined
   }
 
   const cellOf = (column: number, row: number): Run => {
@@ -75,7 +97,7 @@ export const faceOf = (left: number): Run[][] => {
     const has = (part: Part) => dots.some(dot => dot.part === part)
     const part: Part = has('hand') ? 'hand' : has('left') ? 'left' : 'tick'
     const bits = dots
-      .filter(dot => dot.part !== undefined)
+      .filter(dot => dot.part === part || dot.part === 'tick')
       .reduce((sum, dot) => sum | dot.bit, 0)
 
     return { part, text: String.fromCodePoint(BRAILLE + bits) }

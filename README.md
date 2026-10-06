@@ -8,13 +8,14 @@ Mods for Claude Code. Install and usage notes live in each mod's own README.
 
 Widgets above the prompt, each in its own box, switched on or off by a command:
 
-![A pomodoro timer and a calendar, each in a rounded box](docs/echo-widget.svg)
+![A pomodoro timer, a calendar and the context window as Tetris, each in a rounded box](docs/echo-widget.svg)
 
 | Command | What it does |
 | --- | --- |
 | `/echo-widget` | List the widgets and whether each is on |
 | `/echo-widget pomo` | Switch the pomodoro timer on or off |
 | `/echo-widget calendar` | Switch the calendar on or off |
+| `/echo-widget context` | Switch the context well on or off |
 | `/pomo` | Start, pause or resume the timer |
 | `/pomo-skip` | Jump to the next phase |
 | `/pomo-reset` | Stop and clear the timer |

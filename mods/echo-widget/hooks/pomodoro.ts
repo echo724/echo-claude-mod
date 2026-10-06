@@ -55,6 +55,17 @@ export const following = (
     ? started('break', timer.round, now, minutes)
     : started('focus', timer.round + 1, now, minutes)
 
+/**
+ * The phase after one that ran out: a break starts at once, but the next
+ * focus waits, paused at its full length, until the person starts it.
+ * Left to cycle unwatched, the timer would log focus nobody did.
+ */
+export const succeeding = (timer: Pomodoro, minutes: Minutes): Pomodoro => {
+  const next = following(timer, timer.endsAt ?? timer.startedAt, minutes)
+
+  return next.phase === 'focus' ? { ...next, endsAt: null } : next
+}
+
 /** `50` or `50 10` as focus and break minutes, within the limits; else nothing. */
 export const minutesOf = (order: string, now: Minutes): Minutes | undefined => {
   const [, focus, rest] = /^(\d+)(?:\s+(\d+))?$/.exec(order) ?? []

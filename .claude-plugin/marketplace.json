@@ -8,7 +8,7 @@
     {
       "name": "echo-widget",
       "source": "./mods/echo-widget",
-      "description": "Widgets above the prompt, each in its own box and switched on or off by a command: a pomodoro timer and a calendar"
+      "description": "Widgets above the prompt, each in its own box and switched on or off by a command: a pomodoro timer, a calendar and the context window as Tetris"
     }
   ]
 }
