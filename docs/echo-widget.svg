@@ -46,15 +46,22 @@
 <circle cx="69.5" cy="120.6" r="1.25" fill="#e5626b"/>
 <circle cx="69.5" cy="124.6" r="1.25" fill="#e5626b"/>
 <circle cx="69.5" cy="128.6" r="1.25" fill="#e5626b"/>
-<circle cx="78.5" cy="120.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="78.5" cy="124.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="83.5" cy="120.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="83.5" cy="124.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="87.5" cy="124.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="92.5" cy="124.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="96.5" cy="128.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="101.5" cy="128.6" r="1.25" fill="#e6e4dc"/>
-<circle cx="105.5" cy="128.6" r="1.25" fill="#e6e4dc"/>
+<circle cx="74.5" cy="116.6" r="1.25" fill="#e5626b"/>
+<circle cx="74.5" cy="120.6" r="1.25" fill="#e5626b"/>
+<circle cx="74.5" cy="124.6" r="1.25" fill="#e5626b"/>
+<circle cx="74.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="78.5" cy="116.6" r="1.25" fill="#e5626b"/>
+<circle cx="78.5" cy="120.6" r="1.25" fill="#e5626b"/>
+<circle cx="78.5" cy="124.6" r="1.25" fill="#e5626b"/>
+<circle cx="78.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="83.5" cy="124.6" r="1.25" fill="#e5626b"/>
+<circle cx="83.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="87.5" cy="124.6" r="1.25" fill="#e5626b"/>
+<circle cx="87.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="92.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="96.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="101.5" cy="128.6" r="1.25" fill="#e5626b"/>
+<circle cx="110.5" cy="128.6" r="1.25" fill="#e6e4dc"/>
 <circle cx="119.5" cy="124.6" r="1.25" fill="#8c8a84"/>
 <circle cx="123.5" cy="124.6" r="1.25" fill="#8c8a84"/>
 <rect x="153" y="121" width="9" height="3" fill="#e5626b"/>
@@ -104,7 +111,10 @@
 <circle cx="101.5" cy="139.6" r="1.25" fill="#e5626b"/>
 <circle cx="101.5" cy="143.6" r="1.25" fill="#e5626b"/>
 <circle cx="105.5" cy="135.6" r="1.25" fill="#e5626b"/>
-<circle cx="119.5" cy="143.6" r="1.25" fill="#8c8a84"/>
+<circle cx="110.5" cy="135.6" r="1.25" fill="#e6e4dc"/>
+<circle cx="114.5" cy="135.6" r="1.25" fill="#e6e4dc"/>
+<circle cx="119.5" cy="135.6" r="1.25" fill="#e6e4dc"/>
+<circle cx="119.5" cy="143.6" r="1.25" fill="#e6e4dc"/>
 <text y="145.68" x="157.5 166.5 175.5 184.5 193.5 220.5 229.5" fill="#8c8a84">FOCUS#1</text>
 <circle cx="60.5" cy="162.6" r="1.25" fill="#8c8a84"/>
 <circle cx="83.5" cy="162.6" r="1.25" fill="#8c8a84"/>
