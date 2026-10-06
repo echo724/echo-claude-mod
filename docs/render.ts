@@ -5,9 +5,16 @@
 import { calendarLines } from '../mods/echo-widget/hooks/calendar'
 import { toggled } from '../mods/echo-widget/hooks/pomodoro'
 import { pomodoroLines } from '../mods/echo-widget/hooks/pomodoro-widget'
-import { EMPTY_WELL, isMoving, measured, stepped } from '../mods/echo-widget/hooks/tetris'
+import {
+  EMPTY_WELL,
+  isMoving,
+  measured,
+  resized,
+  stepped,
+} from '../mods/echo-widget/hooks/tetris'
 import { wellLines } from '../mods/echo-widget/hooks/tetris-widget'
 import type { Well } from '../mods/echo-widget/types'
+import { centered } from '../mods/echo-widget/hooks/widget'
 import type { Line } from '../mods/echo-widget/hooks/widget'
 
 const CELL_WIDTH = 9
@@ -42,6 +49,7 @@ const DOTS = [
 const MINUTE_MS = 60_000
 const timer = toggled(null, 0, { focus: 25, break: 5 })
 const WINDOW = 200_000
+const month = calendarLines('2026-10-05')
 // A session eight turns in, the last turn's piece still on its way down.
 const well = [0.12, 0.15, 0.21, 0.3, 0.42, 0.5, 0.57, 0.63].reduce<Well>(
   (held, share, turn, shares) => {
@@ -53,13 +61,12 @@ const well = [0.12, 0.15, 0.21, 0.3, 0.42, 0.5, 0.57, 0.63].reduce<Well>(
 
     return now
   },
-  { ...EMPTY_WELL, limit: 167_000 },
+  { ...resized(EMPTY_WELL, month.length * 2), limit: 167_000 },
 )
-const widgets: Line[][] = [
-  pomodoroLines(timer, 7.5 * MINUTE_MS),
-  calendarLines('2026-10-05'),
-  wellLines(well),
-]
+// Every box is the calendar's height, its lines in the middle.
+const widgets: Line[][] = [pomodoroLines(timer, 7.5 * MINUTE_MS), month, wellLines(well)].map(
+  lines => centered(lines, month.length),
+)
 
 const lengthOf = (line: Line) =>
   line.reduce((sum, span) => sum + [...span.text].length, 0)

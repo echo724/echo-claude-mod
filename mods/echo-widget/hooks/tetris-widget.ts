@@ -1,5 +1,5 @@
 import type { Block, Well } from '../types'
-import { tokensOf, viewOf, WELL_COLUMNS, WELL_ROWS } from './tetris'
+import { tokensOf, viewOf, WELL_COLUMNS } from './tetris'
 import type { Line, Span } from './widget'
 
 // The classic colors, as near as the theme has them.
@@ -19,13 +19,12 @@ const OVER_SHARE = 0.95
 const BESIDE_WIDTH = 9
 // A row of dots at each of a braille cell's four heights, top to bottom.
 const LIMIT_DOTS = ['⠉', '⠒', '⠤', '⣀'] as const
-const DOT_ROWS = (WELL_ROWS / 2) * LIMIT_DOTS.length
 
 /**
- * The context window as a well of blocks, a cell a hundredth of it, with the
- * figures beside it. A character holds two cells, one over the other, so the
- * well is half as many lines as it has rows. The dotted line is where
- * auto-compaction runs.
+ * The context window as a well of blocks, each cell the same share of it,
+ * with the figures beside it, set in the middle of the well's height. A
+ * character holds two cells, one over the other, so the well is half as many
+ * lines as it has rows. The dotted line is where auto-compaction runs.
  */
 export const wellLines = (well: Well): Line[] => {
   const { tokens, window, limit } = well
@@ -33,11 +32,13 @@ export const wellLines = (well: Well): Line[] => {
   const reach = limit === null || limit <= 0 ? share : (tokens ?? 0) / limit
   const tint = reach >= OVER_SHARE ? 'error' : reach >= WARN_SHARE ? 'warning' : 'inactive'
   const view = viewOf(well)
+  const lines = Math.ceil(view.length / 2)
+  const dotRows = lines * LIMIT_DOTS.length
   // The limit's height, counted in dot rows from the top; none when it is off.
   const dot =
     limit === null || window <= 0 || limit >= window
       ? -1
-      : Math.min(DOT_ROWS - 1, Math.max(0, Math.round((1 - limit / window) * DOT_ROWS)))
+      : Math.min(dotRows - 1, Math.max(0, Math.round((1 - limit / window) * dotRows)))
   const beside = [
     tokens === null ? '--%' : `${Math.round(share * 100)}%`,
     `${tokensOf(tokens ?? 0)}/${tokensOf(window)}`,
@@ -67,14 +68,20 @@ export const wellLines = (well: Well): Line[] => {
       : { text: '▀', color: colorOf(top), background: colorOf(bottom) }
   }
 
-  return beside.map((text, line) => [
-    { text: '┊', color: tint },
-    ...Array.from({ length: WELL_COLUMNS }, (_, column) => cellOf(line, column)),
-    { text: '┊', color: tint },
-    {
-      text: `  ${text.padEnd(BESIDE_WIDTH)}`,
-      color: line === 0 ? (tint === 'inactive' ? 'text' : tint) : line === 4 ? tint : 'inactive',
-      isBold: line === 0,
-    },
-  ])
+  const above = Math.max(0, Math.floor((lines - beside.length) / 2))
+
+  return Array.from({ length: lines }, (_, line) => {
+    const at = line - above
+
+    return [
+      { text: '┊', color: tint },
+      ...Array.from({ length: WELL_COLUMNS }, (_, column) => cellOf(line, column)),
+      { text: '┊', color: tint },
+      {
+        text: `  ${(beside[at] ?? '').padEnd(BESIDE_WIDTH)}`,
+        color: at === 0 ? (tint === 'inactive' ? 'text' : tint) : at === 4 ? tint : 'inactive',
+        isBold: at === 0,
+      },
+    ]
+  })
 }

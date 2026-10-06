@@ -10,3 +10,12 @@ export type Span = {
 
 /** One row of a widget's box. */
 export type Line = Span[]
+
+/** Lines set in the middle of a box this many rows tall, blank above and below. */
+export const centered = (lines: Line[], rows: number): Line[] => {
+  const above = Math.max(0, Math.floor((rows - lines.length) / 2))
+  const below = Math.max(0, rows - lines.length - above)
+  const blank = (count: number): Line[] => Array.from({ length: count }, () => [{ text: ' ' }])
+
+  return [...blank(above), ...lines, ...blank(below)]
+}

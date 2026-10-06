@@ -76,8 +76,9 @@ turns over by itself at midnight.
 
 ### Context
 
-The session's context window as a well of Tetris blocks, ten cells by ten: a
-cell is a hundredth of the window, so the well is full when the window is.
+The session's context window as a well of Tetris blocks, ten cells across
+and as tall as its box: every cell is the same share of the window, so the
+well is full when the window is.
 
 - What is there at the first reading (the system prompt, the tools) is the
   grey floor. After that, each turn drops what it added as pieces: a

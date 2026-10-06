@@ -1,8 +1,9 @@
 import type { Block, Falling, Well } from '../types'
 
 export const WELL_COLUMNS = 10
+/** The rows of a well nothing has sized; `resized` gives it others. */
 export const WELL_ROWS = 10
-/** A cell is a hundredth of the context window. */
+/** At that size a cell is a hundredth of the context window. */
 export const WELL_CELLS = WELL_COLUMNS * WELL_ROWS
 
 const PIECE_CELLS = 4
@@ -10,17 +11,16 @@ const FLASH_FRAMES = 3
 // A dip under this many cells is the window settling, not a compaction.
 const CLEAR_CELLS = 5
 // A backlog this long drops a row faster for each such stretch.
-const HURRY_CELLS = 8
+const HURRY_CELLS = 16
 
 type Cells = Falling['cells']
 type Rows = Well['rows']
 
-const NO_ROWS: Rows = Array.from({ length: WELL_ROWS }, () =>
-  Array.from({ length: WELL_COLUMNS }, () => null),
-)
+const noRows = (rows: number): Rows =>
+  Array.from({ length: rows }, () => Array.from({ length: WELL_COLUMNS }, () => null))
 
 export const EMPTY_WELL: Well = {
-  rows: NO_ROWS,
+  rows: noRows(WELL_ROWS),
   falling: null,
   owed: 0,
   flash: 0,
@@ -87,7 +87,7 @@ const isFree = (rows: Rows, cells: Cells, column: number, row: number): boolean 
     const at = row + y
 
     // Above the well a piece is still on its way in.
-    return at < WELL_ROWS && (at < 0 || rows[at]?.[column + x] === null)
+    return at < rows.length && (at < 0 || rows[at]?.[column + x] === null)
   })
 
 /** Where a piece let go over a column comes to rest, and how good a fit that is. */
@@ -104,10 +104,10 @@ const landingOf = (rows: Rows, cells: Cells, column: number) => {
     const under = rest + y + 1
     const isOwn = cells.some(([ox, oy]) => ox === x && oy === y + 1)
 
-    return !isOwn && under < WELL_ROWS && rows[under]?.[column + x] === null
+    return !isOwn && under < rows.length && rows[under]?.[column + x] === null
   }).length
 
-  return { cells, column, rest, cost: holes * 3 + (WELL_ROWS - rest) }
+  return { cells, column, rest, cost: holes * 3 + (rows.length - rest) }
 }
 
 const filled = (rows: Rows, cells: Cells, column: number, row: number, block: Block): Rows =>
@@ -118,12 +118,21 @@ const filled = (rows: Rows, cells: Cells, column: number, row: number, block: Bl
   )
 
 /** The well with this many cells settled, as one grey floor from the bottom up. */
-const floorOf = (cells: number): Rows =>
-  NO_ROWS.map((line, row) =>
+const floorOf = (rows: number, cells: number): Rows =>
+  noRows(rows).map((line, row) =>
     line.map((_, column) =>
-      (WELL_ROWS - 1 - row) * WELL_COLUMNS + column < cells ? 'floor' : null,
+      (rows - 1 - row) * WELL_COLUMNS + column < cells ? 'floor' : null,
     ),
   )
+
+/** The cells of a well this many rows tall that such a fill of the window takes. */
+const targetOf = (rows: number, tokens: number | null | undefined, window: number): number => {
+  const cells = rows * WELL_COLUMNS
+
+  return tokens === undefined || tokens === null || window <= 0
+    ? 0
+    : Math.min(cells, Math.round((tokens / window) * cells))
+}
 
 /** Cells with no room to fall into go to the lowest gaps, so the count holds. */
 const packed = (rows: Rows, cells: number, block: Block): Rows => {
@@ -156,10 +165,7 @@ export const measured = (
   context: { tokens?: number; window: number },
 ): Well => {
   const { tokens, window } = context
-  const target =
-    tokens === undefined || window <= 0
-      ? 0
-      : Math.min(WELL_CELLS, Math.round((tokens / window) * WELL_CELLS))
+  const target = targetOf(well.rows.length, tokens, window)
   const held = heldOf(well)
   const now: Well = {
     ...well,
@@ -175,7 +181,7 @@ export const measured = (
 
   // What was there before the first reading is no turn's: it is the floor.
   if (held === 0) {
-    return { ...now, rows: floorOf(target) }
+    return { ...now, rows: floorOf(well.rows.length, target) }
   }
 
   if (target >= held) {
@@ -186,6 +192,22 @@ export const measured = (
     ? now
     : { ...now, falling: null, owed: 0, flash: FLASH_FRAMES, clearTo: target }
 }
+
+/**
+ * The well at another height: its cells are a smaller or larger share of the
+ * window each, so what it held settles as the floor of the same fill.
+ */
+export const resized = (well: Well, rows: number): Well =>
+  well.rows.length === rows
+    ? well
+    : {
+        ...well,
+        rows: floorOf(rows, targetOf(rows, well.tokens, well.window)),
+        falling: null,
+        owed: 0,
+        flash: 0,
+        clearTo: 0,
+      }
 
 /** Lets go of the next piece owed, over the column it fits best or near it. */
 const launched = (well: Well): Well => {
@@ -241,7 +263,7 @@ export const stepped = (well: Well): Well => {
   if (well.flash > 0) {
     return well.flash > 1
       ? { ...well, flash: well.flash - 1 }
-      : { ...well, flash: 0, rows: floorOf(well.clearTo) }
+      : { ...well, flash: 0, rows: floorOf(well.rows.length, well.clearTo) }
   }
 
   const { falling } = well

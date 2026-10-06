@@ -19,8 +19,9 @@ import {
   toggled,
 } from './pomodoro'
 import { accentOf, pomodoroLines } from './pomodoro-widget'
-import { EMPTY_WELL, isMoving, measured, stepped, tokensOf } from './tetris'
+import { EMPTY_WELL, isMoving, measured, resized, stepped, tokensOf } from './tetris'
 import { wellLines } from './tetris-widget'
+import { centered } from './widget'
 import type { Line } from './widget'
 
 const ALL_SHOWN: Shown = { pomo: true, calendar: true, context: true }
@@ -36,7 +37,7 @@ const TIMER_KEY = 'timer'
 const LOG_KEY = 'log'
 const MINUTES_KEY = 'minutes'
 const SECOND_MS = 1000
-const FRAME_MS = 120
+const FRAME_MS = 280
 const WIDGETS = ['pomo', 'calendar', 'context'] as const
 const SOUNDS = { focus: 'sounds/focus-done.wav', break: 'sounds/break-done.wav' } as const
 
@@ -202,6 +203,18 @@ const animate = ($: EngineInterface) => {
   })
 }
 
+/**
+ * Every box is as tall as the month's calendar. The well is drawn to fill
+ * that, two rows a line, so it is sized to the month too.
+ */
+const fit = async ($: EngineInterface, day: string) => {
+  const rows = calendarLines(day).length * 2
+
+  if ((await read($, well)).rows.length !== rows) {
+    await update($, well, held => resized(held, rows))
+  }
+}
+
 /** Where auto-compaction runs, in tokens; none when it is off or unknown. */
 const limitOf = async ($: EngineInterface): Promise<number | null> => {
   try {
@@ -231,6 +244,7 @@ export const register: Register = on => {
     await update($, minutes, () => asked ?? DEFAULT_MINUTES)
     const day = dayOf(await $.clock.now())
     await update($, today, () => day)
+    await fit($, day)
     await sync($)
 
     // A reload stops the frames, not the piece they were dropping.
@@ -255,6 +269,7 @@ export const register: Register = on => {
 
       if (dayOf(at) !== (await read($, today))) {
         await update($, today, () => dayOf(at))
+        await fit($, dayOf(at))
       }
 
       // Another session moved the timer on: say so here too.
@@ -355,7 +370,8 @@ export const register: Register = on => {
     return done
   })
 
-  // Every widget switched on draws in a rounded box of its own, side by side.
+  // Every widget switched on draws in a rounded box of its own, side by side,
+  // each the calendar's height with its own lines in the middle.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const isOn = await read($, shown)
     const now = await read($, timer)
@@ -370,8 +386,10 @@ export const register: Register = on => {
       })
     }
 
+    const month = calendarLines(await read($, today))
+
     if (isOn.calendar) {
-      boxes.push({ lines: calendarLines(await read($, today)), border: 'inactive' })
+      boxes.push({ lines: month, border: 'inactive' })
     }
 
     const held = await read($, well)
@@ -397,7 +415,7 @@ export const register: Register = on => {
             borderColor={box.border}
             paddingX={1}
           >
-            {box.lines.map(line => (
+            {centered(box.lines, month.length).map(line => (
               <Box>
                 {line.map(span => (
                   <Text

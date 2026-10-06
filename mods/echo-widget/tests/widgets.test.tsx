@@ -5,6 +5,7 @@ import { DISK, FACE_COLUMNS, FACE_ROWS, faceOf, TICKS } from '../hooks/face'
 import type { Run } from '../hooks/face'
 import { EMPTY_LOG, logged, toggled } from '../hooks/pomodoro'
 import { pomodoroLines } from '../hooks/pomodoro-widget'
+import { centered } from '../hooks/widget'
 
 const BAND = {
   plugin: 'echo-widget',
@@ -185,6 +186,16 @@ const moved = (dots: Set<string>, move: (x: number, y: number) => [number, numbe
     }),
   )
 const SHARES = Array.from({ length: 101 }, (_, step) => step / 100)
+
+test('lines sit in the middle of a taller box, the odd row below', () => {
+  const lines = [[{ text: 'a' }], [{ text: 'b' }]]
+  const texts = (rows: number) => centered(lines, rows).map(line => line[0]?.text)
+
+  expect(texts(2)).toEqual(['a', 'b'])
+  expect(texts(4)).toEqual([' ', 'a', 'b', ' '])
+  expect(texts(5)).toEqual([' ', 'a', 'b', ' ', ' '])
+  expect(texts(1)).toEqual(['a', 'b'])
+})
 
 test('the disk is round: the same mirrored, flipped and turned', () => {
   expect(DISK.size).toBeGreaterThan(100)

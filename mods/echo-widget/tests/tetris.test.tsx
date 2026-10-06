@@ -4,6 +4,7 @@ import {
   EMPTY_WELL,
   isMoving,
   measured,
+  resized,
   stepped,
   tokensOf,
   WELL_CELLS,
@@ -139,6 +140,24 @@ test('every row of the well is one width, and the limit line shows', () => {
   // 167k of 200k is 83.5%: three dot rows down the top line.
   expect(text(wells[3] ?? EMPTY_WELL)).toContain('⣀')
   expect(text(wells[4] ?? EMPTY_WELL)).toContain('840k/1M')
+})
+
+test('a resized well keeps its fill, fills its height, and centers its figures', () => {
+  const well = resized(settled(at(at(EMPTY_WELL, 13), 50)), 14)
+
+  expect(well.rows.length).toBe(14)
+  expect(isMoving(well)).toBe(false)
+  // Half of fourteen rows of ten.
+  expect(blocksOf(well)).toEqual(Array.from({ length: 70 }, () => 'floor'))
+  expect(blocksOf(settled(at(well, 100))).length).toBe(140)
+  expect(resized(well, 14)).toBe(well)
+
+  const lines = wellLines(well).map(line => line.map(span => span.text).join(''))
+
+  expect(lines.length).toBe(7)
+  expect(lines.map(line => [...line].length)).toEqual(Array.from({ length: 7 }, () => 23))
+  expect(lines.findIndex(line => line.includes('50%'))).toBe(1)
+  expect(lines.findIndex(line => line.includes('CONTEXT'))).toBe(5)
 })
 
 test('token counts stay four characters or fewer', () => {
