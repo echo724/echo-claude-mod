@@ -19,6 +19,7 @@ import {
   toggled,
 } from './pomodoro'
 import { accentOf, pomodoroLines } from './pomodoro-widget'
+import { boxSvg } from './svg'
 import { EMPTY_WELL, isMoving, measured, resized, stepped, tokensOf } from './tetris'
 import { wellLines } from './tetris-widget'
 import { centered } from './widget'
@@ -375,7 +376,7 @@ export const register: Register = on => {
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const isOn = await read($, shown)
     const now = await read($, timer)
-    const boxes: { lines: Line[]; border: string }[] = []
+    const boxes: { lines: Line[]; border: string; label: string }[] = []
 
     // With no timer set there is nothing to show: the box waits on /pomo.
     if (isOn.pomo && now !== null) {
@@ -383,27 +384,51 @@ export const register: Register = on => {
         lines: pomodoroLines(now, await $.clock.now()),
         // A running phase colors its box's border.
         border: accentOf(now) ?? 'inactive',
+        label: 'Pomodoro timer',
       })
     }
 
     const month = calendarLines(await read($, today))
 
     if (isOn.calendar) {
-      boxes.push({ lines: month, border: 'inactive' })
+      boxes.push({ lines: month, border: 'inactive', label: 'Calendar' })
     }
 
     const held = await read($, well)
 
     // A well with no window to measure against has no scale to draw.
     if (isOn.context && held.window > 0) {
-      boxes.push({ lines: wellLines(held), border: 'inactive' })
+      boxes.push({ lines: wellLines(held), border: 'inactive', label: 'Context window' })
     }
 
     if (e.props.hasSurvey || boxes.length === 0) {
       return next(e)
     }
 
-    const { Box, Text } = $.ui.resolve(e)
+    const elements = $.ui.resolve(e)
+    const { Box, Text } = elements
+
+    if (e.surface !== 'terminal' && 'Svg' in elements) {
+      const { Svg } = elements
+
+      return (
+        <Box gap={1} flexWrap="wrap" alignItems="flex-end">
+          {boxes.map(box => {
+            const drawn = boxSvg(centered(box.lines, month.length), box.border, box.label)
+
+            return (
+              <Svg
+                key={box.label}
+                source={drawn.source}
+                width={drawn.width}
+                height={drawn.height}
+                alt={drawn.alt}
+              />
+            )
+          })}
+        </Box>
+      )
+    }
 
     return (
       <Box gap={1} flexWrap="wrap" alignItems="flex-end">

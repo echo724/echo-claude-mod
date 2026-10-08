@@ -27,6 +27,8 @@ Then run `/reload-plugins`, or start a new session.
 
 All are on after install. The choice is kept across sessions. The boxes sit
 side by side on the line above the prompt, each as tall as its content.
+In the terminal they are text; in the desktop app, VS Code and mobile each
+box is drawn as an image that follows the app's light or dark theme.
 
 | Command | What it does |
 | --- | --- |

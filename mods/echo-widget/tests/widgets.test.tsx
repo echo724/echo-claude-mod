@@ -120,6 +120,44 @@ test('widgets switch on and off, and the pomodoro runs in its box', async ($, on
   await band.unmount()
 })
 
+test('the desktop draws each widget as an image', async ($, on) => {
+  mock.clock(on, { now: new Date(2026, 9, 5, 9).getTime() })
+  mock.store(on)
+  on('session.start', ($, e) => ({ cwd: e.cwd }))
+  on('command.register', ($, e) => ({ value: { command: e.name } }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('audio.play', () => ({ value: undefined }))
+  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>nothing</Text>
+  })
+
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  const images = async () => band.findAll({ type: 'Svg' })
+
+  expect(await images()).toHaveLength(1)
+  const [calendar] = await images()
+  expect(String(calendar?.props.alt)).toContain('Calendar: October 2026')
+  expect(String(calendar?.props.source)).toMatch(/^<svg /)
+  expect(String(calendar?.props.source)).toContain('prefers-color-scheme: dark')
+  expect(await band.findAll({ type: 'Text' })).toHaveLength(0)
+
+  await $.command.run({
+    command: 'pomo',
+    args: '',
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 100 },
+  })
+  const [timer] = await images()
+  expect(await images()).toHaveLength(2)
+  expect(String(timer?.props.alt)).toContain('FOCUS #1')
+  expect(String(timer?.props.source)).toContain('s-error')
+  await band.unmount()
+})
+
 test('the calendar lays the month out by week and marks today', () => {
   const rows = calendarLines('2026-10-05').map(line =>
     line.map(span => span.text).join(''),
